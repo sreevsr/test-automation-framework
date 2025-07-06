@@ -1,0 +1,53 @@
+{
+  "name": "comprehensive-test-automation-framework",
+  "version": "1.0.0",
+  "description": "CodeceptJS framework for Web UI, API, Mobile Web, and Mobile App testing",
+  "main": "index.js",
+  "scripts": {
+    "test": "codeceptjs run",
+    "test:web": "codeceptjs run --grep '@web'",
+    "test:api": "codeceptjs run --grep '@api'",
+    "test:mobile": "codeceptjs run --grep '@mobile'",
+    "test:mobile-web": "codeceptjs run --grep '@mobile-web'",
+    "test:smoke": "codeceptjs run --grep '@smoke'",
+    "test:regression": "codeceptjs run --grep '@regression'",
+    "test:simple": "codeceptjs run --config codecept.simple.conf.js",
+    "test:simple:api": "codeceptjs run --config codecept.simple.conf.js --grep '@api'",
+    "test:parallel": "codeceptjs run-multiple parallel",
+    "test:headless": "codeceptjs run --config codecept.headless.conf.js",
+    "test:debug": "codeceptjs run --debug",
+    "test:steps": "codeceptjs run --steps",
+    "report": "allure serve output/allure-reports",
+    "report:generate": "allure generate output/allure-reports --clean",
+    "setup": "npm install && npx playwright install",
+    "clean": "rm -rf output/*"
+  },
+  "dependencies": {
+    "codeceptjs": "^3.5.0",
+    "@codeceptjs/configure": "^0.10.0",
+    "playwright": "^1.40.0",
+    "appium": "^2.0.0",
+    "webdriverio": "^8.0.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.0.0",
+    "allure-commandline": "^2.24.0",
+    "allure-codeceptjs": "^2.15.0",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.0.0",
+    "moment": "^2.29.0",
+    "chai": "^4.3.0",
+    "axios": "^1.5.0"
+  },
+  "keywords": [
+    "codeceptjs",
+    "test-automation",
+    "playwright",
+    "appium",
+    "bdd",
+    "api-testing",
+    "mobile-testing"
+  ],
+  "author": "Test Automation Team",
+  "license": "MIT"
+}

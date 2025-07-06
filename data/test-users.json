@@ -1,0 +1,183 @@
+{
+  "environments": {
+    "test": {
+      "baseUrl": "https://test.example.com",
+      "apiUrl": "https://api-test.example.com"
+    },
+    "staging": {
+      "baseUrl": "https://staging.example.com",
+      "apiUrl": "https://api-staging.example.com"
+    },
+    "production": {
+      "baseUrl": "https://example.com",
+      "apiUrl": "https://api.example.com"
+    }
+  },
+  
+  "users": {
+    "standardUser": {
+      "email": "standard.user@example.com",
+      "password": "StandardPass123!",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "user",
+      "status": "active",
+      "permissions": ["read", "create", "update"]
+    },
+    
+    "adminUser": {
+      "email": "admin.user@example.com",
+      "password": "AdminPass123!",
+      "firstName": "Admin",
+      "lastName": "User",
+      "role": "admin",
+      "status": "active",
+      "permissions": ["read", "create", "update", "delete", "manage"]
+    },
+    
+    "readOnlyUser": {
+      "email": "readonly.user@example.com",
+      "password": "ReadOnlyPass123!",
+      "firstName": "Jane",
+      "lastName": "Reader",
+      "role": "viewer",
+      "status": "active",
+      "permissions": ["read"]
+    },
+    
+    "inactiveUser": {
+      "email": "inactive.user@example.com",
+      "password": "InactivePass123!",
+      "firstName": "Inactive",
+      "lastName": "User",
+      "role": "user",
+      "status": "inactive",
+      "permissions": []
+    },
+    
+    "testUser": {
+      "email": "test.user@example.com",
+      "password": "TestPass123!",
+      "firstName": "Test",
+      "lastName": "User",
+      "role": "user",
+      "status": "active",
+      "permissions": ["read", "create", "update"],
+      "temporary": true
+    }
+  },
+  
+  "products": [
+    {
+      "id": 1,
+      "name": "Smartphone Pro",
+      "description": "Latest smartphone with advanced features",
+      "price": 999.99,
+      "category": "Electronics",
+      "sku": "SP001",
+      "inStock": true,
+      "quantity": 50
+    },
+    {
+      "id": 2,
+      "name": "Laptop Ultra",
+      "description": "High-performance laptop for professionals",
+      "price": 1599.99,
+      "category": "Computers",
+      "sku": "LU002",
+      "inStock": true,
+      "quantity": 25
+    },
+    {
+      "id": 3,
+      "name": "Wireless Headphones",
+      "description": "Premium noise-cancelling headphones",
+      "price": 299.99,
+      "category": "Audio",
+      "sku": "WH003",
+      "inStock": false,
+      "quantity": 0
+    }
+  ],
+  
+  "orders": [
+    {
+      "orderId": "ORD001",
+      "customerId": "CUST001",
+      "customerEmail": "standard.user@example.com",
+      "products": [
+        {
+          "productId": 1,
+          "quantity": 2,
+          "price": 999.99
+        }
+      ],
+      "total": 1999.98,
+      "status": "completed",
+      "orderDate": "2024-01-15T10:30:00Z",
+      "shippingAddress": {
+        "street": "123 Main St",
+        "city": "Anytown",
+        "state": "CA",
+        "zipCode": "12345",
+        "country": "USA"
+      }
+    }
+  ],
+  
+  "invalidCredentials": [
+    {
+      "email": "wrong@email.com",
+      "password": "wrongpassword",
+      "expectedError": "Invalid credentials"
+    },
+    {
+      "email": "test@example.com",
+      "password": "wrongpassword",
+      "expectedError": "Invalid password"
+    },
+    {
+      "email": "",
+      "password": "password123",
+      "expectedError": "Email is required"
+    },
+    {
+      "email": "test@example.com",
+      "password": "",
+      "expectedError": "Password is required"
+    },
+    {
+      "email": "invalid-email",
+      "password": "password123",
+      "expectedError": "Please enter a valid email"
+    }
+  ],
+  
+  "testConfiguration": {
+    "timeouts": {
+      "default": 30000,
+      "api": 15000,
+      "mobile": 60000
+    },
+    "retries": {
+      "flaky": 3,
+      "network": 2,
+      "mobile": 5
+    },
+    "browsers": ["chromium", "firefox", "webkit"],
+    "mobileDevices": [
+      {
+        "name": "iPhone 12 Pro",
+        "width": 390,
+        "height": 844,
+        "userAgent": "iPhone"
+      },
+      {
+        "name": "Samsung Galaxy S21",
+        "width": 360,
+        "height": 800,
+        "userAgent": "Android"
+      }
+    ]
+  }
+}

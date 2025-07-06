@@ -1,0 +1,11 @@
+email,password,firstName,lastName,role,expectedResult
+valid.user1@example.com,ValidPass123!,John,Doe,user,success
+valid.user2@example.com,ValidPass123!,Jane,Smith,admin,success
+invalid.user@example.com,WrongPass123!,Invalid,User,user,invalid_credentials
+test.user@example.com,,Test,User,user,password_required
+,ValidPass123!,Empty,Email,user,email_required
+invalid-email,ValidPass123!,Invalid,Format,user,invalid_email_format
+weak.user@example.com,123,Weak,Password,user,weak_password
+long.email.address.that.exceeds.normal.limits@verylongdomainname.example.com,ValidPass123!,Long,Email,user,success
+special.chars@example.com,Special!@#$%Pass123,Special,Chars,user,success
+unicode.user@ëxämplë.com,UnicödePass123!,Üser,Tëst,user,success
