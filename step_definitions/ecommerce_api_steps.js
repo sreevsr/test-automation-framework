@@ -1,13 +1,33 @@
 const { I } = inject();
+const { ApiConstants, ErrorMessages } = require('../config/constants');
+const { ValidationError, ApiError } = require('../utils/errors');
 
-// Global test data storage
+/**
+ * E-commerce API Step Definitions
+ * 
+ * Implements BDD step definitions for e-commerce API testing scenarios.
+ * Provides reusable steps for product management, cart operations, and order processing.
+ * 
+ * @fileoverview BDD step definitions for e-commerce API testing
+ */
+
+/** @type {Object} Global test data storage for sharing between steps */
 let testData = {};
 
-// Helper functions
+/**
+ * Saves test data for use in subsequent steps
+ * @param {string} key - Key to store data under
+ * @param {*} data - Data to store
+ */
 function saveTestData(key, data) {
   testData[key] = data;
 }
 
+/**
+ * Retrieves test data saved in previous steps
+ * @param {string} key - Key to retrieve data for
+ * @returns {*} Stored data or null if not found
+ */
 function getTestData(key) {
   return testData[key] || null;
 }

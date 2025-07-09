@@ -1,38 +1,144 @@
 const { I } = inject();
+const { ApiConstants, ErrorMessages } = require('../config/constants');
+const { 
+  ValidationError, 
+  AuthenticationError, 
+  NotFoundError, 
+  ApiError 
+} = require('../utils/errors');
 
+/**
+ * UserAPI - Comprehensive user management API client
+ * 
+ * Handles all user-related API operations including authentication, CRUD operations,
+ * search functionality, and user management. Follows REST API conventions with
+ * proper error handling and validation.
+ * 
+ * @class UserAPI
+ * @example
+ * const userAPI = new UserAPI();
+ * await userAPI.authenticate('user@example.com', 'password');
+ * const users = await userAPI.getAllUsers();
+ */
 class UserAPI {
   
+  /**
+   * Creates a new UserAPI instance
+   * @constructor
+   */
   constructor() {
-    this.endpoint = '/users';
-    this.headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
+    /** @type {string} Base endpoint for user operations */
+    this.endpoint = ApiConstants.ENDPOINTS.USERS;
+    /** @type {Object} Default headers for API requests */
+    this.headers = { ...ApiConstants.DEFAULT_HEADERS };
   }
   
   // Authentication
+  /**
+   * Authenticates a user and stores the authentication token
+   * @param {string} email - User email address
+   * @param {string} password - User password
+   * @returns {Promise<Object>} Authentication response with token
+   * @throws {Error} If email or password is missing
+   * @throws {Error} If authentication fails
+   * @example
+   * const response = await userAPI.authenticate('user@example.com', 'password123');
+   */
   async authenticate(email, password) {
-    const response = await I.sendPostRequest('/auth/login', {
-      email: email,
-      password: password
-    });
-    
-    if (response.data && response.data.token) {
-      this.headers['Authorization'] = `Bearer ${response.data.token}`;
+    // Input validation
+    if (!email) {
+      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'email', email);
+    }
+    if (!password) {
+      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'password', password);
+    }
+    if (!this._isValidEmail(email)) {
+      throw new ValidationError(ErrorMessages.VALIDATION.INVALID_EMAIL, 'email', email);
     }
     
-    return response;
+    try {
+      const response = await I.sendPostRequest(ApiConstants.ENDPOINTS.LOGIN, {
+        email: email,
+        password: password
+      });
+      
+      if (response.data && response.data.token) {
+        this.headers['Authorization'] = `Bearer ${response.data.token}`;
+      } else {
+        throw new AuthenticationError(ErrorMessages.AUTHENTICATION.INVALID_CREDENTIALS, email);
+      }
+      
+      return response;
+    } catch (error) {
+      if (error.response && error.response.status === ApiConstants.STATUS_CODES.UNAUTHORIZED) {
+        throw new AuthenticationError(ErrorMessages.AUTHENTICATION.INVALID_CREDENTIALS, email);
+      }
+      throw error;
+    }
   }
   
+  /**
+   * Logs out the current user and clears authentication token
+   * @returns {Promise<Object>} Logout response
+   * @example
+   * await userAPI.logout();
+   */
   async logout() {
-    const response = await I.sendPostRequest('/auth/logout', {}, this.headers);
-    delete this.headers['Authorization'];
-    return response;
+    try {
+      const response = await I.sendPostRequest(ApiConstants.ENDPOINTS.LOGOUT, {}, this.headers);
+      delete this.headers['Authorization'];
+      return response;
+    } catch (error) {
+      // Clean up token even if logout fails
+      delete this.headers['Authorization'];
+      throw error;
+    }
   }
   
   // User CRUD operations
+  /**
+   * Creates a new user via API
+   * @param {Object} userData - User data for creation
+   * @param {string} userData.email - User email (required)
+   * @param {string} userData.firstName - User first name (required)
+   * @param {string} userData.lastName - User last name (required)
+   * @param {string} [userData.role='user'] - User role (optional)
+   * @param {string} [userData.status='active'] - User status (optional)
+   * @returns {Promise<Object>} API response with created user data
+   * @throws {Error} If required fields are missing
+   * @example
+   * const user = await userAPI.createUser({
+   *   email: 'john@example.com',
+   *   firstName: 'John',
+   *   lastName: 'Doe'
+   * });
+   */
   async createUser(userData) {
-    return await I.sendPostRequest(this.endpoint, userData, this.headers);
+    // Input validation
+    if (!userData) {
+      throw new ValidationError('User data is required', 'userData', userData);
+    }
+    if (!userData.email) {
+      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'email', userData.email);
+    }
+    if (!userData.firstName) {
+      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'firstName', userData.firstName);
+    }
+    if (!userData.lastName) {
+      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'lastName', userData.lastName);
+    }
+    if (!this._isValidEmail(userData.email)) {
+      throw new ValidationError(ErrorMessages.VALIDATION.INVALID_EMAIL, 'email', userData.email);
+    }
+    
+    try {
+      return await I.sendPostRequest(this.endpoint, userData, this.headers);
+    } catch (error) {
+      if (error.response && error.response.status === ApiConstants.STATUS_CODES.BAD_REQUEST) {
+        throw new ValidationError('Invalid user data provided', 'userData', userData);
+      }
+      throw error;
+    }
   }
   
   async getUserById(userId) {
@@ -187,6 +293,16 @@ class UserAPI {
   }
   
   // Test data generators
+  /**
+   * Generates test user data with optional overrides
+   * @param {Object} [overrides={}] - Values to override default data
+   * @returns {Object} Generated user data object
+   * @example
+   * const userData = userAPI.generateUserData({
+   *   role: 'admin',
+   *   status: 'active'
+   * });
+   */
   generateUserData(overrides = {}) {
     return {
       firstName: global.testUtils.generateRandomName().split(' ')[0],
@@ -197,6 +313,30 @@ class UserAPI {
       status: 'active',
       ...overrides
     };
+  }
+
+  // Private helper methods
+  /**
+   * Validates email format using regex
+   * @private
+   * @param {string} email - Email to validate
+   * @returns {boolean} True if email is valid
+   */
+  _isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  /**
+   * Validates user ID format
+   * @private
+   * @param {string|number} userId - User ID to validate
+   * @returns {boolean} True if user ID is valid
+   */
+  _isValidUserId(userId) {
+    return userId !== null && userId !== undefined && 
+           (typeof userId === 'string' || typeof userId === 'number') && 
+           userId.toString().length > 0;
   }
   
   generateBulkUsers(count = 5) {

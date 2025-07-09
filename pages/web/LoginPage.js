@@ -1,18 +1,42 @@
 const { I } = inject();
+const { UiSelectors, ErrorMessages } = require('../../config/constants');
+const { ValidationError, ElementNotFoundError } = require('../../utils/errors');
 
+/**
+ * LoginPage - Page Object Model for login functionality
+ * 
+ * Handles all login-related UI interactions including form filling,
+ * validation, and navigation. Provides methods for both positive
+ * and negative test scenarios.
+ * 
+ * @class LoginPage
+ * @example
+ * const loginPage = new LoginPage();
+ * await loginPage.open();
+ * await loginPage.login('user@example.com', 'password123');
+ */
 class LoginPage {
   
-  // Locators
+  /**
+   * Creates a new LoginPage instance
+   * @constructor
+   */
+  constructor() {
+    /** @type {string} Login page URL */
+    this.url = '/login';
+  }
+
+  /** @type {Object} UI element selectors for login page */
   locators = {
-    emailField: '#email',
-    passwordField: '#password',
-    loginButton: 'button[type="submit"]',
-    rememberMeCheckbox: '#remember-me',
-    forgotPasswordLink: 'a[href*="forgot-password"]',
+    emailField: UiSelectors.LOGIN_PAGE.EMAIL_FIELD,
+    passwordField: UiSelectors.LOGIN_PAGE.PASSWORD_FIELD,
+    loginButton: UiSelectors.LOGIN_PAGE.LOGIN_BUTTON,
+    rememberMeCheckbox: UiSelectors.LOGIN_PAGE.REMEMBER_ME_CHECKBOX,
+    forgotPasswordLink: UiSelectors.LOGIN_PAGE.FORGOT_PASSWORD_LINK,
     signUpLink: 'a[href*="signup"]',
-    errorMessage: '.error-message',
-    successMessage: '.success-message',
-    loadingSpinner: '.loading-spinner'
+    errorMessage: UiSelectors.LOGIN_PAGE.ERROR_MESSAGE,
+    successMessage: UiSelectors.LOGIN_PAGE.SUCCESS_MESSAGE,
+    loadingSpinner: UiSelectors.COMMON.LOADING_SPINNER
   };
   
   // Actions
