@@ -241,7 +241,7 @@ class UserFactory {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john.doe@example.com',
-        password: 'SecurePass123!',
+        password: TestDataConstants.DEFAULT_PASSWORDS.USER,
         role: TestDataConstants.USER_ROLES.USER,
         status: TestDataConstants.USER_STATUS.ACTIVE,
         phone: '+1-555-123-4567',
@@ -262,17 +262,17 @@ class UserFactory {
         firstName: 'Jane',
         lastName: 'Smith',
         email: 'jane.smith@example.com',
-        password: 'Pass123!'
+        password: TestDataConstants.DEFAULT_PASSWORDS.TEST
       },
       'corporate-user': {
         firstName: 'Michael',
         lastName: 'Johnson',
-        email: 'michael.johnson@company.com',
-        password: 'Corporate123!',
+        email: 'michael.johnson@example-corp.com',
+        password: TestDataConstants.DEFAULT_PASSWORDS.USER,
         role: TestDataConstants.USER_ROLES.USER,
         department: 'Engineering',
         employeeId: 'EMP001',
-        manager: 'sarah.wilson@company.com'
+        manager: 'sarah.wilson@example-corp.com'
       }
     };
     
