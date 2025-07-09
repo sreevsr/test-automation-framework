@@ -6,13 +6,17 @@ const {
   NotFoundError, 
   ApiError 
 } = require('../utils/errors');
+const { logger } = require('../utils/Logger');
+const AuthenticationService = require('./services/AuthenticationService');
+const UserRepository = require('./services/UserRepository');
+const UserSearchService = require('./services/UserSearchService');
 
 /**
  * UserAPI - Comprehensive user management API client
  * 
  * Handles all user-related API operations including authentication, CRUD operations,
- * search functionality, and user management. Follows REST API conventions with
- * proper error handling and validation.
+ * search functionality, and user management. Now refactored to use dependency injection
+ * and follows Single Responsibility Principle.
  * 
  * @class UserAPI
  * @example
@@ -25,54 +29,49 @@ class UserAPI {
   /**
    * Creates a new UserAPI instance
    * @constructor
+   * @param {Object} [dependencies] - Injected dependencies
+   * @param {AuthenticationService} [dependencies.authService] - Authentication service
+   * @param {UserRepository} [dependencies.userRepository] - User repository
+   * @param {UserSearchService} [dependencies.searchService] - Search service
+   * @param {Logger} [dependencies.logger] - Logger instance
    */
-  constructor() {
-    /** @type {string} Base endpoint for user operations */
+  constructor(dependencies = {}) {
+    // Dependency injection with fallback to default instances
+    this.authService = dependencies.authService || new AuthenticationService();
+    this.userRepository = dependencies.userRepository || new UserRepository(this.authService);
+    this.searchService = dependencies.searchService || new UserSearchService(this.authService);
+    this.logger = dependencies.logger || logger.child({ component: 'UserAPI' });
+    
+    // Legacy support - maintain backward compatibility
     this.endpoint = ApiConstants.ENDPOINTS.USERS;
-    /** @type {Object} Default headers for API requests */
-    this.headers = { ...ApiConstants.DEFAULT_HEADERS };
+    this.headers = this.authService.getHeaders();
+    
+    this.logger.debug('UserAPI initialized with dependency injection');
   }
   
-  // Authentication
+  // Authentication (delegated to AuthenticationService)
   /**
    * Authenticates a user and stores the authentication token
    * @param {string} email - User email address
    * @param {string} password - User password
    * @returns {Promise<Object>} Authentication response with token
-   * @throws {Error} If email or password is missing
-   * @throws {Error} If authentication fails
+   * @throws {ValidationError} If email or password is missing or invalid
+   * @throws {AuthenticationError} If authentication fails
    * @example
    * const response = await userAPI.authenticate('user@example.com', 'password123');
    */
   async authenticate(email, password) {
-    // Input validation
-    if (!email) {
-      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'email', email);
-    }
-    if (!password) {
-      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'password', password);
-    }
-    if (!this._isValidEmail(email)) {
-      throw new ValidationError(ErrorMessages.VALIDATION.INVALID_EMAIL, 'email', email);
-    }
+    this.logger.debug('Authenticating user', { email });
     
     try {
-      const response = await I.sendPostRequest(ApiConstants.ENDPOINTS.LOGIN, {
-        email: email,
-        password: password
-      });
+      const response = await this.authService.login(email, password);
+      // Update headers for backward compatibility
+      this.headers = this.authService.getHeaders();
       
-      if (response.data && response.data.token) {
-        this.headers['Authorization'] = `Bearer ${response.data.token}`;
-      } else {
-        throw new AuthenticationError(ErrorMessages.AUTHENTICATION.INVALID_CREDENTIALS, email);
-      }
-      
+      this.logger.info('User authenticated successfully', { email });
       return response;
     } catch (error) {
-      if (error.response && error.response.status === ApiConstants.STATUS_CODES.UNAUTHORIZED) {
-        throw new AuthenticationError(ErrorMessages.AUTHENTICATION.INVALID_CREDENTIALS, email);
-      }
+      this.logger.error('Authentication failed', { email, error: error.message });
       throw error;
     }
   }
@@ -84,18 +83,22 @@ class UserAPI {
    * await userAPI.logout();
    */
   async logout() {
+    this.logger.debug('Logging out user');
+    
     try {
-      const response = await I.sendPostRequest(ApiConstants.ENDPOINTS.LOGOUT, {}, this.headers);
-      delete this.headers['Authorization'];
+      const response = await this.authService.logout();
+      // Update headers for backward compatibility
+      this.headers = this.authService.getHeaders();
+      
+      this.logger.info('User logged out successfully');
       return response;
     } catch (error) {
-      // Clean up token even if logout fails
-      delete this.headers['Authorization'];
+      this.logger.error('Logout failed', { error: error.message });
       throw error;
     }
   }
   
-  // User CRUD operations
+  // User CRUD operations (delegated to UserRepository)
   /**
    * Creates a new user via API
    * @param {Object} userData - User data for creation
@@ -105,7 +108,7 @@ class UserAPI {
    * @param {string} [userData.role='user'] - User role (optional)
    * @param {string} [userData.status='active'] - User status (optional)
    * @returns {Promise<Object>} API response with created user data
-   * @throws {Error} If required fields are missing
+   * @throws {ValidationError} If required fields are missing
    * @example
    * const user = await userAPI.createUser({
    *   email: 'john@example.com',
@@ -114,66 +117,121 @@ class UserAPI {
    * });
    */
   async createUser(userData) {
-    // Input validation
-    if (!userData) {
-      throw new ValidationError('User data is required', 'userData', userData);
-    }
-    if (!userData.email) {
-      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'email', userData.email);
-    }
-    if (!userData.firstName) {
-      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'firstName', userData.firstName);
-    }
-    if (!userData.lastName) {
-      throw new ValidationError(ErrorMessages.VALIDATION.REQUIRED_FIELD, 'lastName', userData.lastName);
-    }
-    if (!this._isValidEmail(userData.email)) {
-      throw new ValidationError(ErrorMessages.VALIDATION.INVALID_EMAIL, 'email', userData.email);
-    }
+    this.logger.debug('Creating user', { email: userData?.email });
     
     try {
-      return await I.sendPostRequest(this.endpoint, userData, this.headers);
+      const response = await this.userRepository.create(userData);
+      this.logger.info('User created successfully', { email: userData?.email, userId: response.data?.id });
+      return response;
     } catch (error) {
-      if (error.response && error.response.status === ApiConstants.STATUS_CODES.BAD_REQUEST) {
-        throw new ValidationError('Invalid user data provided', 'userData', userData);
-      }
+      this.logger.error('Failed to create user', { email: userData?.email, error: error.message });
       throw error;
     }
   }
   
   async getUserById(userId) {
-    return await I.sendGetRequest(`${this.endpoint}/${userId}`, this.headers);
+    this.logger.debug('Getting user by ID', { userId });
+    
+    try {
+      const response = await this.userRepository.findById(userId);
+      this.logger.debug('User retrieved successfully', { userId });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to get user', { userId, error: error.message });
+      throw error;
+    }
   }
   
   async getAllUsers(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${this.endpoint}?${queryString}` : this.endpoint;
-    return await I.sendGetRequest(url, this.headers);
+    this.logger.debug('Getting all users', { params });
+    
+    try {
+      const response = await this.userRepository.findAll(params);
+      this.logger.debug('Users retrieved successfully', { count: response.data?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to get users', { error: error.message });
+      throw error;
+    }
   }
   
   async updateUser(userId, userData) {
-    return await I.sendPutRequest(`${this.endpoint}/${userId}`, userData, this.headers);
+    this.logger.debug('Updating user', { userId });
+    
+    try {
+      const response = await this.userRepository.update(userId, userData);
+      this.logger.info('User updated successfully', { userId });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to update user', { userId, error: error.message });
+      throw error;
+    }
   }
   
   async partialUpdateUser(userId, userData) {
-    return await I.sendPatchRequest(`${this.endpoint}/${userId}`, userData, this.headers);
+    this.logger.debug('Partially updating user', { userId });
+    
+    try {
+      const response = await this.userRepository.partialUpdate(userId, userData);
+      this.logger.info('User partially updated successfully', { userId });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to partially update user', { userId, error: error.message });
+      throw error;
+    }
   }
   
   async deleteUser(userId) {
-    return await I.sendDeleteRequest(`${this.endpoint}/${userId}`, this.headers);
+    this.logger.debug('Deleting user', { userId });
+    
+    try {
+      const response = await this.userRepository.delete(userId);
+      this.logger.info('User deleted successfully', { userId });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to delete user', { userId, error: error.message });
+      throw error;
+    }
   }
   
-  // User search and filtering
+  // User search and filtering (delegated to UserSearchService)
   async searchUsers(searchQuery) {
-    return await I.sendGetRequest(`${this.endpoint}/search?q=${encodeURIComponent(searchQuery)}`, this.headers);
+    this.logger.debug('Searching users', { searchQuery });
+    
+    try {
+      const response = await this.searchService.search(searchQuery);
+      this.logger.debug('User search completed', { searchQuery, count: response.data?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to search users', { searchQuery, error: error.message });
+      throw error;
+    }
   }
   
   async getUsersByRole(role) {
-    return await I.sendGetRequest(`${this.endpoint}?role=${role}`, this.headers);
+    this.logger.debug('Getting users by role', { role });
+    
+    try {
+      const response = await this.searchService.searchByRole(role);
+      this.logger.debug('Users by role retrieved', { role, count: response.data?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to get users by role', { role, error: error.message });
+      throw error;
+    }
   }
   
   async getUsersByStatus(status) {
-    return await I.sendGetRequest(`${this.endpoint}?status=${status}`, this.headers);
+    this.logger.debug('Getting users by status', { status });
+    
+    try {
+      const response = await this.searchService.searchByStatus(status);
+      this.logger.debug('Users by status retrieved', { status, count: response.data?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to get users by status', { status, error: error.message });
+      throw error;
+    }
   }
   
   // User profile operations
@@ -193,25 +251,44 @@ class UserAPI {
     );
   }
   
-  // Password management
+  // Password management (delegated to AuthenticationService)
   async changePassword(userId, oldPassword, newPassword) {
-    return await I.sendPostRequest(`${this.endpoint}/${userId}/change-password`, {
-      oldPassword: oldPassword,
-      newPassword: newPassword
-    }, this.headers);
+    this.logger.debug('Changing password', { userId });
+    
+    try {
+      const response = await this.authService.changePassword(userId, oldPassword, newPassword);
+      this.logger.info('Password changed successfully', { userId });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to change password', { userId, error: error.message });
+      throw error;
+    }
   }
   
   async resetPassword(email) {
-    return await I.sendPostRequest('/auth/reset-password', {
-      email: email
-    });
+    this.logger.debug('Resetting password', { email });
+    
+    try {
+      const response = await this.authService.resetPassword(email);
+      this.logger.info('Password reset initiated', { email });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to reset password', { email, error: error.message });
+      throw error;
+    }
   }
   
   async verifyPasswordReset(token, newPassword) {
-    return await I.sendPostRequest('/auth/verify-reset', {
-      token: token,
-      newPassword: newPassword
-    });
+    this.logger.debug('Verifying password reset');
+    
+    try {
+      const response = await this.authService.verifyPasswordReset(token, newPassword);
+      this.logger.info('Password reset verified successfully');
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to verify password reset', { error: error.message });
+      throw error;
+    }
   }
   
   // User permissions and roles
@@ -242,23 +319,44 @@ class UserAPI {
     return await I.sendGetRequest(`${this.endpoint}/${userId}/login-history`, this.headers);
   }
   
-  // Bulk operations
+  // Bulk operations (delegated to UserRepository)
   async bulkCreateUsers(usersArray) {
-    return await I.sendPostRequest(`${this.endpoint}/bulk`, {
-      users: usersArray
-    }, this.headers);
+    this.logger.debug('Bulk creating users', { count: usersArray?.length });
+    
+    try {
+      const response = await this.userRepository.bulkCreate(usersArray);
+      this.logger.info('Bulk user creation completed', { count: usersArray?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to bulk create users', { count: usersArray?.length, error: error.message });
+      throw error;
+    }
   }
   
   async bulkUpdateUsers(updates) {
-    return await I.sendPatchRequest(`${this.endpoint}/bulk`, {
-      updates: updates
-    }, this.headers);
+    this.logger.debug('Bulk updating users', { count: updates?.length });
+    
+    try {
+      const response = await this.userRepository.bulkUpdate(updates);
+      this.logger.info('Bulk user update completed', { count: updates?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to bulk update users', { count: updates?.length, error: error.message });
+      throw error;
+    }
   }
   
   async bulkDeleteUsers(userIds) {
-    return await I.sendDeleteRequest(`${this.endpoint}/bulk`, {
-      userIds: userIds
-    }, this.headers);
+    this.logger.debug('Bulk deleting users', { count: userIds?.length });
+    
+    try {
+      const response = await this.userRepository.bulkDelete(userIds);
+      this.logger.info('Bulk user deletion completed', { count: userIds?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to bulk delete users', { count: userIds?.length, error: error.message });
+      throw error;
+    }
   }
   
   // Validation helpers
@@ -315,7 +413,50 @@ class UserAPI {
     };
   }
 
-  // Private helper methods
+  // Utility methods (for backward compatibility)
+  /**
+   * Gets current authentication status
+   * @returns {boolean} True if authenticated
+   */
+  isAuthenticated() {
+    return this.authService.isAuthenticated();
+  }
+  
+  /**
+   * Gets current authentication token
+   * @returns {string|null} Current token or null
+   */
+  getToken() {
+    return this.authService.getToken();
+  }
+  
+  /**
+   * Gets current headers
+   * @returns {Object} Current headers
+   */
+  getHeaders() {
+    return this.authService.getHeaders();
+  }
+  
+  /**
+   * Advanced search with multiple criteria
+   * @param {Object} criteria - Search criteria
+   * @returns {Promise<Object>} Search results
+   */
+  async advancedSearch(criteria) {
+    this.logger.debug('Performing advanced search', { criteria });
+    
+    try {
+      const response = await this.searchService.advancedSearch(criteria);
+      this.logger.debug('Advanced search completed', { criteria, count: response.data?.length });
+      return response;
+    } catch (error) {
+      this.logger.error('Failed to perform advanced search', { criteria, error: error.message });
+      throw error;
+    }
+  }
+  
+  // Private helper methods (maintained for backward compatibility)
   /**
    * Validates email format using regex
    * @private

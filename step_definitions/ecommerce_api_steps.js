@@ -1,6 +1,10 @@
 const { I } = inject();
 const { ApiConstants, ErrorMessages } = require('../config/constants');
 const { ValidationError, ApiError } = require('../utils/errors');
+const { logger } = require('../utils/Logger');
+
+// Create step-specific logger
+const stepLogger = logger.child({ component: 'StepDefinitions' });
 
 /**
  * E-commerce API Step Definitions
@@ -34,48 +38,108 @@ function getTestData(key) {
 
 // Background steps
 Given('the API is available', async () => {
-  // Test a simple health check or basic endpoint
-  const response = await I.sendGetRequest('/posts'); // Using JSONPlaceholder for demo
-  console.log('✅ API is available and responding');
+  stepLogger.step('API Health Check', 'Checking API availability');
+  
+  try {
+    const response = await I.sendGetRequest('/posts'); // Using JSONPlaceholder for demo
+    stepLogger.apiResponse(response.status || 200, '/posts');
+    stepLogger.assertion('API is available and responding', true);
+  } catch (error) {
+    stepLogger.error('API health check failed', { error: error.message });
+    stepLogger.assertion('API is available and responding', false);
+    throw error;
+  }
 });
 
 // Product-related steps
 When('I request all products', async () => {
-  // Using JSONPlaceholder posts as mock products
-  const response = await I.sendGetRequest('/posts');
-  saveTestData('products', response.data);
-  console.log(`📦 Retrieved ${response.data.length} products`);
+  stepLogger.step('Get All Products', 'Requesting all products from API');
+  
+  try {
+    stepLogger.apiRequest('GET', '/posts');
+    const response = await I.sendGetRequest('/posts');
+    stepLogger.apiResponse(response.status || 200, '/posts');
+    
+    saveTestData('products', response.data);
+    stepLogger.info(`Retrieved ${response.data.length} products`, { count: response.data.length });
+  } catch (error) {
+    stepLogger.error('Failed to retrieve products', { error: error.message });
+    throw error;
+  }
 });
 
 Then('I should receive a list of products', async () => {
+  stepLogger.step('Validate Product List', 'Checking if products array is valid');
+  
   const products = getTestData('products');
-  if (!Array.isArray(products) || products.length === 0) {
-    throw new Error('Expected a non-empty array of products');
+  const isValid = Array.isArray(products) && products.length > 0;
+  
+  stepLogger.assertion('Received valid product list', isValid, { 
+    isArray: Array.isArray(products), 
+    length: products?.length || 0 
+  });
+  
+  if (!isValid) {
+    const error = new Error('Expected a non-empty array of products');
+    stepLogger.error('Product list validation failed', { error: error.message });
+    throw error;
   }
-  console.log('✅ Received valid product list');
 });
 
 Then('each product should have required fields', async () => {
+  stepLogger.step('Validate Product Fields', 'Checking required fields for all products');
+  
   const products = getTestData('products');
   const requiredFields = ['id', 'title', 'body', 'userId']; // JSONPlaceholder fields
   
-  products.forEach((product, index) => {
-    requiredFields.forEach(field => {
-      if (!product.hasOwnProperty(field)) {
-        throw new Error(`Product ${index} missing required field: ${field}`);
-      }
+  try {
+    products.forEach((product, index) => {
+      requiredFields.forEach(field => {
+        if (!product.hasOwnProperty(field)) {
+          const error = new Error(`Product ${index} missing required field: ${field}`);
+          stepLogger.error('Product field validation failed', { 
+            productIndex: index, 
+            missingField: field, 
+            error: error.message 
+          });
+          throw error;
+        }
+      });
     });
-  });
-  console.log('✅ All products have required fields');
+    
+    stepLogger.assertion('All products have required fields', true, { 
+      productCount: products.length,
+      requiredFields 
+    });
+  } catch (error) {
+    stepLogger.assertion('All products have required fields', false);
+    throw error;
+  }
 });
 
 Given('a product exists with ID {int}', async (productId) => {
-  const response = await I.sendGetRequest(`/posts/${productId}`);
-  if (!response.data || !response.data.id) {
-    throw new Error(`Product with ID ${productId} not found`);
+  stepLogger.step('Verify Product Exists', `Checking if product ${productId} exists`);
+  
+  try {
+    stepLogger.apiRequest('GET', `/posts/${productId}`);
+    const response = await I.sendGetRequest(`/posts/${productId}`);
+    stepLogger.apiResponse(response.status || 200, `/posts/${productId}`);
+    
+    const exists = response.data && response.data.id;
+    stepLogger.assertion(`Product ${productId} exists`, exists, { productId, found: !!response.data });
+    
+    if (!exists) {
+      const error = new Error(`Product with ID ${productId} not found`);
+      stepLogger.error('Product existence check failed', { productId, error: error.message });
+      throw error;
+    }
+    
+    saveTestData('currentProduct', response.data);
+    stepLogger.debug(`Product ${productId} verified and saved`, { productId });
+  } catch (error) {
+    stepLogger.error('Failed to verify product existence', { productId, error: error.message });
+    throw error;
   }
-  saveTestData('currentProduct', response.data);
-  console.log(`✅ Product ${productId} exists`);
 });
 
 When('I request product with ID {int}', async (productId) => {
@@ -135,46 +199,93 @@ Then('all returned products should belong to electronics', async () => {
 
 // Cart functionality
 Given('I have an empty cart', async () => {
-  // Initialize empty cart
-  saveTestData('cart', { items: [], total: 0 });
-  console.log('🛒 Cart initialized as empty');
+  stepLogger.step('Initialize Cart', 'Creating empty cart');
+  
+  const emptyCart = { items: [], total: 0 };
+  saveTestData('cart', emptyCart);
+  
+  stepLogger.info('Cart initialized as empty', { cart: emptyCart });
 });
 
 When('I add product ID {int} to the cart', async (productId) => {
-  // Get product details first
-  const response = await I.sendGetRequest(`/posts/${productId}`);
-  const product = response.data;
+  stepLogger.step('Add Product to Cart', `Adding product ${productId} to cart`);
   
-  // Simulate adding to cart
-  const cart = getTestData('cart');
-  const price = productId * 10.99; // Simulated price
-  
-  cart.items.push({
-    productId: productId,
-    title: product.title,
-    price: price,
-    quantity: 1
-  });
-  cart.total += price;
-  
-  saveTestData('cart', cart);
-  console.log(`🛒 Added product ${productId} to cart`);
+  try {
+    // Get product details first
+    stepLogger.apiRequest('GET', `/posts/${productId}`);
+    const response = await I.sendGetRequest(`/posts/${productId}`);
+    stepLogger.apiResponse(response.status || 200, `/posts/${productId}`);
+    
+    const product = response.data;
+    const cart = getTestData('cart');
+    const price = productId * 10.99; // Simulated price
+    
+    const cartItem = {
+      productId: productId,
+      title: product.title,
+      price: price,
+      quantity: 1
+    };
+    
+    cart.items.push(cartItem);
+    cart.total += price;
+    
+    saveTestData('cart', cart);
+    stepLogger.info(`Added product ${productId} to cart`, { 
+      productId, 
+      price, 
+      cartTotal: cart.total, 
+      itemCount: cart.items.length 
+    });
+  } catch (error) {
+    stepLogger.error('Failed to add product to cart', { productId, error: error.message });
+    throw error;
+  }
 });
 
 Then('the cart should contain {int} item(s)', async (expectedCount) => {
+  stepLogger.step('Validate Cart Item Count', `Checking cart contains ${expectedCount} items`);
+  
   const cart = getTestData('cart');
-  if (cart.items.length !== expectedCount) {
-    throw new Error(`Expected ${expectedCount} items in cart, but found ${cart.items.length}`);
+  const actualCount = cart.items.length;
+  const isValid = actualCount === expectedCount;
+  
+  stepLogger.assertion(`Cart contains ${expectedCount} item(s)`, isValid, { 
+    expected: expectedCount, 
+    actual: actualCount 
+  });
+  
+  if (!isValid) {
+    const error = new Error(`Expected ${expectedCount} items in cart, but found ${actualCount}`);
+    stepLogger.error('Cart item count validation failed', { 
+      expected: expectedCount, 
+      actual: actualCount, 
+      error: error.message 
+    });
+    throw error;
   }
-  console.log(`✅ Cart contains ${expectedCount} item(s)`);
 });
 
 Then('the cart total should be updated', async () => {
+  stepLogger.step('Validate Cart Total', 'Checking cart total is updated');
+  
   const cart = getTestData('cart');
-  if (cart.total <= 0) {
-    throw new Error('Cart total should be greater than 0');
+  const isValid = cart.total > 0;
+  
+  stepLogger.assertion('Cart total is greater than 0', isValid, { 
+    total: cart.total 
+  });
+  
+  if (!isValid) {
+    const error = new Error('Cart total should be greater than 0');
+    stepLogger.error('Cart total validation failed', { 
+      total: cart.total, 
+      error: error.message 
+    });
+    throw error;
   }
-  console.log(`✅ Cart total updated: $${cart.total.toFixed(2)}`);
+  
+  stepLogger.info(`Cart total updated: $${cart.total.toFixed(2)}`, { total: cart.total });
 });
 
 When('I try to add product ID {int} to the cart', async (productId) => {
