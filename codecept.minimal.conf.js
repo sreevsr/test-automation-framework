@@ -17,10 +17,8 @@ module.exports.config = {
     }
   },
   
-  // Include configuration
-  include: {
-    I: './steps_file.js'
-  },
+  // Include configuration (optional for basic tests)
+  include: {},
   
   // BDD Configuration
   gherkin: {

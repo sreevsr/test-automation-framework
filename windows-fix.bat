@@ -36,13 +36,13 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo Testing minimal configuration...
-npm run test:minimal:smoke
+echo Testing basic configuration (most reliable)...
+npm run test:basic:smoke
 if %errorlevel% equ 0 (
-    echo SUCCESS: Minimal tests are working!
-    echo You can now use: npm run test:minimal:smoke
+    echo SUCCESS: Basic BDD tests are working!
+    echo You can now use: npm run test:basic:smoke
 ) else (
-    echo Tests failed, trying simple API tests...
+    echo Basic tests failed, trying simple API tests...
     npm run test:simple:api
     if %errorlevel% equ 0 (
         echo SUCCESS: Simple API tests are working!
@@ -55,8 +55,8 @@ if %errorlevel% equ 0 (
 
 echo.
 echo Available working commands:
-echo   npm run test:minimal:smoke  - Minimal BDD smoke tests
-echo   npm run test:simple:api     - Simple API tests
+echo   npm run test:basic:smoke    - Basic BDD smoke tests (MOST RELIABLE)
+echo   npm run test:simple:api     - Simple API tests (fallback)
 echo   npm run debug              - Environment validation
 echo.
 pause

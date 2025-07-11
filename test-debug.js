@@ -100,12 +100,12 @@ https.get(testUrl, (res) => {
 });
 
 function runSimpleTest() {
-  console.log('\n🧪 Running minimal test:');
-  console.log('Command: npx codeceptjs run --config codecept.minimal.conf.js --grep "@api"');
+  console.log('\n🧪 Running basic test:');
+  console.log('Command: npx codeceptjs run --config codecept.basic.conf.js --grep "@api"');
   
   const isWindows = process.platform === 'win32';
   const command = isWindows ? 'npx.cmd' : 'npx';
-  const args = ['codeceptjs', 'run', '--config', 'codecept.minimal.conf.js', '--grep', '@api'];
+  const args = ['codeceptjs', 'run', '--config', 'codecept.basic.conf.js', '--grep', '@api'];
   
   const child = spawn(command, args, {
     stdio: 'inherit',
@@ -118,20 +118,21 @@ function runSimpleTest() {
     if (code === 0) {
       console.log('✅ Tests executed successfully!');
       console.log('\n🎉 Your environment is working correctly!');
-      console.log('   You can now run: npm run test:minimal:smoke');
+      console.log('   You can now run: npm run test:basic:smoke');
     } else {
       console.log('❌ Tests failed or encountered issues');
       console.log('\n🔧 Troubleshooting suggestions (try in order):');
-      console.log('1. npm run test:minimal:smoke    - Minimal BDD smoke tests');
-      console.log('2. npm run test:simple:api       - Simple API tests');
+      console.log('1. npm run test:basic:smoke      - Basic BDD smoke tests (most reliable)');
+      console.log('2. npm run test:simple:api       - Simple API tests (fallback)');
       console.log('3. Clean install: rm -rf node_modules && npm install');
       console.log('4. Run the Windows fix script: windows-fix.bat');
       console.log('5. Check the Windows setup guide: WINDOWS_SETUP.md');
     }
     
     console.log('\n📋 Available commands (in order of reliability):');
-    console.log('  npm run test:minimal:smoke - Minimal BDD smoke tests (recommended)');
+    console.log('  npm run test:basic:smoke   - Basic BDD smoke tests (MOST RELIABLE)');
     console.log('  npm run test:simple:api    - Simple API tests (fallback)');
+    console.log('  npm run test:minimal:smoke - Minimal BDD smoke tests');
     console.log('  npm run test:smoke         - Full BDD smoke tests');
     console.log('  npm run test:bdd:api       - Full BDD API tests');
     console.log('  npm run test:bdd           - All BDD tests');
