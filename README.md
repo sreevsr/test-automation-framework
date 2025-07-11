@@ -1,516 +1,491 @@
-# 🚀 Comprehensive Test Automation Framework
+# 🚀 Test Automation Framework
 
-A production-ready CodeceptJS framework supporting **Web UI**, **API**, **Mobile Web**, and **Mobile App** test automation with BDD support.
+A comprehensive, cross-platform test automation framework built with CodeceptJS, supporting BDD (Behavior Driven Development), API testing, and web UI automation.
+
+![Framework Status](https://img.shields.io/badge/Status-Production%20Ready-green)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-blue)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## 📋 Table of Contents
-
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Writing Tests](#writing-tests)
-- [Running Tests](#running-tests)
-- [Best Practices](#best-practices)
-- [CI/CD Integration](#cicd-integration)
-- [Troubleshooting](#troubleshooting)
-
-## ✨ Features
-
-### 🎯 **Multi-Platform Support**
-- **Web UI Testing**: Playwright-powered cross-browser testing
-- **API Testing**: REST API validation and performance testing
-- **Mobile Web Testing**: Responsive design and mobile browser testing
-- **Mobile App Testing**: Native Android/iOS app automation with Appium
-
-### 🧪 **Testing Capabilities**
-- **BDD Support**: Gherkin feature files with plain English scenarios
-- **Page Object Model**: Maintainable and reusable page objects
-- **Data-Driven Testing**: CSV, JSON, and dynamic test data generation
-- **Cross-Browser Testing**: Chrome, Firefox, Safari, Edge support
-- **Parallel Execution**: Faster test execution with configurable parallelism
-
-### 📊 **Reporting & CI/CD**
-- **Allure Reports**: Beautiful, interactive test reports
-- **GitHub Actions**: Automated CI/CD pipeline
-- **Screenshot/Video**: Failure evidence capture
-- **Performance Metrics**: Load time and response time tracking
-
-### 🛡️ **Quality & Maintenance**
-- **Custom Helpers**: Enhanced assertions and utilities
-- **Database Integration**: Test data setup and validation
-- **Environment Management**: Multi-environment configuration
-- **Error Handling**: Retry mechanisms and failure recovery
+- [Quick Start](#-quick-start)
+- [Tag-Based Test Execution](#-tag-based-test-execution)
+- [Windows Users](#-windows-users)
+- [Framework Features](#-framework-features)
+- [Writing Tests](#-writing-tests)
+- [Configuration](#-configuration)
+- [CI/CD Integration](#-cicd-integration)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 16+ 
-- npm or yarn
-- Java 11+ (for mobile testing)
-- Android SDK (for mobile app testing)
+- **Node.js** v16+ ([Download](https://nodejs.org/))
+- **Git** ([Download](https://git-scm.com/))
 
 ### Installation
-
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/sreevsr/test-automation-framework.git
 cd test-automation-framework
 
 # Install dependencies
 npm install
 
-# Setup browsers and tools
-npm run setup
-
-# Copy environment configuration
-cp .env.example .env
-# Edit .env with your specific values
-```
-
-### Run Your First Test
-
-```bash
-# Run smoke tests (fastest)
-npm run test:smoke
-
-# Run all web tests
-npm run test:web
-
-# Run API tests only
-npm run test:api
-
-# Run with debug mode
-npm run test:debug
-```
-
-## 📁 Project Structure
-
-```
-test-automation-framework/
-├── 📁 config/                 # Framework configuration
-│   ├── bootstrap.js           # Global setup
-│   ├── environment.js         # Environment variables
-│   └── teardown.js           # Global cleanup
-├── 📁 data/                   # Test data files
-│   ├── test-users.json       # User credentials and test data
-│   └── test-data.csv         # CSV test data for data-driven tests
-├── 📁 features/              # BDD feature files
-│   └── login.feature         # Gherkin scenarios
-├── 📁 helpers/               # Custom helper classes
-│   ├── AssertionHelper.js    # Enhanced assertions
-│   ├── DataHelper.js         # Test data utilities
-│   └── DatabaseHelper.js     # Database operations
-├── 📁 pages/                 # Page Object Models
-│   ├── 📁 web/               # Web page objects
-│   │   ├── LoginPage.js
-│   │   └── DashboardPage.js
-│   └── 📁 mobile/            # Mobile page objects
-│       └── MobileLoginPage.js
-├── 📁 api/                   # API endpoint classes
-│   └── UserAPI.js            # User management API
-├── 📁 tests/                 # Test files
-│   ├── 📁 web/               # Web UI tests
-│   ├── 📁 api/               # API tests
-│   ├── 📁 mobile-web/        # Mobile web tests
-│   └── 📁 mobile-app/        # Mobile app tests
-├── 📁 step_definitions/      # BDD step implementations
-├── 📁 output/                # Test results and reports
-└── 📁 .github/workflows/     # CI/CD configuration
-```
-
-## ✍️ Writing Tests
-
-### Simple CodeceptJS Test
-
-```javascript
-Feature('Login Functionality');
-
-Scenario('User can login successfully @smoke', async () => {
-  I.amOnPage('/login');
-  I.fillField('email', 'test@example.com');
-  I.fillField('password', 'password123');
-  I.click('Login');
-  I.see('Welcome Dashboard');
-  I.seeInCurrentUrl('/dashboard');
-});
-```
-
-### BDD Feature File
-
-```gherkin
-Feature: User Authentication
-  As a user
-  I want to login to the application
-  So that I can access my account
-
-Scenario: Successful login
-  Given I am on the login page
-  When I enter valid credentials
-  And I click the login button
-  Then I should see the dashboard
-```
-
-### Page Object Example
-
-```javascript
-class LoginPage {
-  locators = {
-    emailField: '#email',
-    passwordField: '#password',
-    loginButton: 'button[type="submit"]'
-  };
-
-  async login(email, password) {
-    I.fillField(this.locators.emailField, email);
-    I.fillField(this.locators.passwordField, password);
-    I.click(this.locators.loginButton);
-  }
-}
-```
-
-### API Test Example
-
-```javascript
-Scenario('Create user via API @api', async () => {
-  const userData = {
-    email: 'newuser@example.com',
-    firstName: 'John',
-    lastName: 'Doe'
-  };
-
-  I.sendPostRequest('/users', userData);
-  I.seeResponseCodeIs(201);
-  I.seeResponseContainsJson({
-    email: userData.email,
-    firstName: userData.firstName
-  });
-});
-```
-
-## 🏃 Running Tests
-
-### Basic Commands
-
-```bash
 # Run all tests
-npm test
-
-# Run by platform
-npm run test:web          # Web UI tests only
-npm run test:api          # API tests only  
-npm run test:mobile       # Mobile app tests
-npm run test:mobile-web   # Mobile web tests
-
-# Run by test type
-npm run test:smoke        # Quick smoke tests
-npm run test:regression   # Full regression suite
-
-# Run with specific tags
-npm test -- --grep "@smoke"
-npm test -- --grep "@api"
-npm test -- --grep "@mobile"
-
-# Parallel execution
-npm run test:parallel
-
-# Debug mode
-npm run test:debug
-npm run test:steps        # See step-by-step execution
+npm run test:all
 ```
 
-### Environment Configuration
-
+### Verify Installation
 ```bash
-# Test against different environments
-NODE_ENV=staging npm test
-NODE_ENV=production npm run test:smoke
+# Quick validation (Windows)
+QUICK_TEST.cmd
 
-# Mobile testing
-PLATFORM=android npm run test:mobile
-PLATFORM=ios npm run test:mobile
+# Or use npm command
+npm run test:all
 ```
 
-### Browser Selection
+## 🏷️ Tag-Based Test Execution
 
+The framework supports comprehensive tag-based test filtering for targeted test execution.
+
+### Available Tags
+
+| Tag | Description | Use Case |
+|-----|-------------|----------|
+| `@smoke` | Quick basic functionality validation | CI/CD pipelines, quick checks |
+| `@regression` | Comprehensive full test suite | Pre-release validation |
+| `@api` | Backend/API endpoint testing | API development, integration |
+| `@web` | Frontend/UI testing | UI development, browser testing |
+| `@products` | Product-related functionality | E-commerce features |
+| `@cart` | Shopping cart operations | Checkout flows |
+| `@login` | Authentication and login flows | Security testing |
+| `@security` | Security and authorization tests | Security audits |
+| `@performance` | Performance and load testing | Performance optimization |
+
+### Execution Methods
+
+#### 1. 📱 **Interactive Menu (Windows)**
+```cmd
+TAG_MENU.cmd
+```
+**Features:**
+- Visual menu with numbered options
+- Descriptions for each test type
+- Automatic execution of selected tests
+- Perfect for non-technical users
+
+#### 2. 🖥️ **Command Line Scripts**
 ```bash
-# Single browser
-BROWSER=firefox npm run test:web
-BROWSER=webkit npm run test:web
+# Individual test types
+npm run test:tag:smoke        # Smoke tests
+npm run test:tag:regression   # Full regression suite
+npm run test:tag:api          # API tests only
+npm run test:tag:web          # Web UI tests only
+npm run test:tag:products     # Product functionality
+npm run test:tag:cart         # Shopping cart features
+npm run test:tag:login        # Authentication flows
+npm run test:tag:security     # Security testing
+npm run test:tag:performance  # Performance tests
 
-# Multiple browsers
-npm run test:parallel     # Runs on Chrome, Firefox, Safari
+# Smart tag runner with interactive selection
+npm run test:by-tag
+npm run test:by-tag smoke
+npm run test:by-tag regression
 ```
 
-## 📊 Test Reports
+#### 3. 🖱️ **Windows Batch Scripts (Double-click)**
+```
+SMOKE_TESTS.cmd       # Quick smoke validation
+REGRESSION_TESTS.cmd  # Full test suite
+API_TESTS.cmd         # API endpoint testing
+WEB_TESTS.cmd         # Web UI testing
+TAG_MENU.cmd          # Interactive selection menu
+QUICK_TEST.cmd        # All tests without filtering
+```
 
-### Generate Reports
-
+#### 4. 🔧 **Direct CodeceptJS Commands**
 ```bash
-# Generate Allure report
-npm run report:generate
+# Most reliable method - works on all platforms
+npx codeceptjs run --config codecept.final.conf.js --grep smoke
+npx codeceptjs run --config codecept.final.conf.js --grep regression
+npx codeceptjs run --config codecept.final.conf.js --grep api
+npx codeceptjs run --config codecept.final.conf.js --grep web
 
-# Serve interactive report
-npm run report
-
-# Clean old reports
-npm run clean
+# Run all tests without filtering
+npx codeceptjs run --config codecept.final.conf.js
 ```
 
-### View Results
+### Tag Combinations
+```bash
+# Multiple tags (API + Smoke)
+npx codeceptjs run --config codecept.final.conf.js --grep "api.*smoke|smoke.*api"
 
-- **Allure Reports**: `output/allure-reports/index.html`
-- **Screenshots**: `output/screenshots/`
-- **Videos**: `output/videos/`
-- **Logs**: `output/logs/`
+# Exclude tags (All except performance)
+npx codeceptjs run --config codecept.final.conf.js --grep "^(?!.*performance).*"
+```
 
-## 🎯 Best Practices
+## 🪟 Windows Users
 
-### 1. Test Organization
+### Automated Setup
+```cmd
+# Pull latest updates
+git pull origin main
 
+# Automated Windows setup and validation
+FINAL_WINDOWS_FIX.cmd
+```
+
+### Quick Commands
+```cmd
+QUICK_TEST.cmd          # Run all tests (most reliable)
+SMOKE_TESTS.cmd         # Quick validation
+TAG_MENU.cmd            # Interactive test selection
+VALIDATE_SUCCESS.cmd    # Validate framework setup
+```
+
+### Troubleshooting
+```cmd
+npm run debug           # Comprehensive diagnostics
+FINAL_WINDOWS_FIX.cmd   # Automated problem resolution
+```
+
+## ⭐ Framework Features
+
+### 🎯 **BDD (Behavior Driven Development)**
+- **Gherkin Syntax**: Write tests in plain English
+- **Business Readable**: Non-technical stakeholders can understand tests
+- **Example**:
+```gherkin
+@smoke @api
+Scenario: Validate product catalog
+  Given the API is available
+  When I request all products
+  Then I should receive a list of products
+  And each product should have required fields
+```
+
+### 🔗 **API Testing**
+- **REST API Support**: Full HTTP method support (GET, POST, PUT, DELETE)
+- **Response Validation**: JSON schema validation and data verification
+- **Authentication**: Token-based auth and session management
+- **Error Handling**: Comprehensive error scenarios
+
+### 🌐 **Web UI Testing**
+- **Cross-browser**: Chrome, Firefox, Safari, Edge
+- **Page Object Model**: Maintainable UI test structure
+- **Element Interactions**: Forms, buttons, navigation
+- **Visual Testing**: Screenshot comparison
+
+### 📱 **Mobile Testing**
+- **Mobile Web**: Responsive design validation
+- **Mobile App**: Native app testing capabilities
+- **Device Emulation**: Various screen sizes and devices
+
+### 🏗️ **Architecture**
+- **Dependency Injection**: Modular, testable components
+- **Factory Pattern**: Test data generation
+- **Structured Logging**: Comprehensive test execution tracking
+- **Error Handling**: Custom error classes with detailed context
+
+## 📝 Writing Tests
+
+### Creating BDD Feature Files
+
+1. **Create a new feature file** in the `features/` directory:
+```gherkin
+# features/user_management.feature
+Feature: User Management
+  As an administrator
+  I want to manage user accounts
+  So that I can control system access
+
+  @smoke @user
+  Scenario: Create new user
+    Given I am logged in as an administrator
+    When I create a new user with email "test@example.com"
+    Then the user should be created successfully
+    And I should see the user in the user list
+
+  @regression @user @security
+  Scenario: User permissions validation
+    Given I have a user with role "standard"
+    When I try to access admin features
+    Then I should be denied access
+    And I should see an authorization error
+```
+
+2. **Implement step definitions** in `step_definitions/`:
 ```javascript
-// ✅ Good: Clear, descriptive scenario names
-Scenario('User can successfully login with valid credentials @smoke', async () => {
-  // test implementation
+// step_definitions/user_steps.js
+Given('I am logged in as an administrator', async () => {
+  await userAPI.authenticate('admin@example.com', 'AdminPass123!');
 });
 
-// ❌ Bad: Vague scenario names
-Scenario('Login test', async () => {
-  // test implementation
+When('I create a new user with email {string}', async (email) => {
+  const userData = userFactory.create({ email });
+  const response = await userAPI.createUser(userData);
+  saveTestData('createdUser', response.data);
+});
+
+Then('the user should be created successfully', async () => {
+  const user = getTestData('createdUser');
+  assert(user.id, 'User should have an ID');
+  assert(user.email, 'User should have an email');
 });
 ```
 
-### 2. Page Objects
+### Adding New Tags
 
+1. **Define the tag** in your feature file:
+```gherkin
+@my-new-feature @api
+Scenario: My new functionality
+  # ... test steps
+```
+
+2. **Add npm script** in `package.json`:
+```json
+"test:tag:my-new-feature": "npx codeceptjs run --config codecept.final.conf.js --grep my-new-feature"
+```
+
+3. **Create Windows batch script** (optional):
+```cmd
+# MY_NEW_FEATURE_TESTS.cmd
+@echo off
+echo Running My New Feature Tests...
+npx codeceptjs run --config codecept.final.conf.js --grep my-new-feature
+pause
+```
+
+4. **Update tag-runner.js** to include your new tag:
 ```javascript
-// ✅ Good: Locators as constants, reusable methods
-class LoginPage {
-  locators = {
-    emailField: '#email',
-    passwordField: '#password'
-  };
+const availableTags = {
+  // ... existing tags
+  'my-new-feature': 'Description of my new feature tests'
+};
+```
 
-  async fillCredentials(email, password) {
-    I.fillField(this.locators.emailField, email);
-    I.fillField(this.locators.passwordField, password);
-  }
-}
+## ⚙️ Configuration
 
-// ❌ Bad: Hardcoded selectors in tests
-Scenario('Login', async () => {
-  I.fillField('#email', 'test@example.com');
-  I.fillField('#password', 'password123');
+### Environment Variables
+```bash
+# API Configuration
+API_URL=https://your-api.com
+BASE_URL=https://your-app.com
+
+# Test Configuration  
+BROWSER=chromium
+HEADLESS=true
+LOG_LEVEL=info
+
+# Authentication
+TEST_USER_EMAIL=user@example.com
+TEST_USER_PASSWORD=TestPass123!
+```
+
+### Configuration Files
+- `codecept.final.conf.js` - Production configuration (recommended)
+- `codecept.simple.conf.js` - Simple API-only testing
+- `codecept.bdd.conf.js` - Full BDD with all features
+- `codecept.basic.conf.js` - Minimal dependencies
+
+### Test Data Management
+```javascript
+// Using the factory pattern
+const userFactory = new UserFactory();
+const testUser = userFactory.create({
+  role: 'admin',
+  status: 'active'
 });
-```
 
-### 3. Data Management
-
-```javascript
-// ✅ Good: Use data helpers and configuration
-const userData = DataHelper.generateUser();
-const testUser = testConfig.users.standard;
-
-// ❌ Bad: Hardcoded test data
-I.fillField('email', 'hardcoded@email.com');
-```
-
-### 4. Test Tags
-
-```javascript
-// ✅ Good: Multiple descriptive tags
-Scenario('User registration flow @smoke @registration @web', async () => {
-
-// ✅ Good: Platform and feature tags  
-Scenario('Mobile login @mobile @login @critical', async () => {
-```
-
-### 5. Assertions
-
-```javascript
-// ✅ Good: Specific, meaningful assertions
-I.see('Login successful');
-I.seeInCurrentUrl('/dashboard');
-I.seeElement('[data-testid="user-menu"]');
-
-// ❌ Bad: Vague assertions
-I.see('Success');
+// Environment-specific data
+const testData = new TestDataFactory();
+const scenario = testData.createScenario('login-flow', {
+  user: { email: 'custom@example.com' }
+});
 ```
 
 ## 🔄 CI/CD Integration
 
 ### GitHub Actions
+The framework includes a pre-configured GitHub Actions workflow:
 
-The framework includes a complete CI/CD pipeline:
+```yaml
+# .github/workflows/test-automation.yml
+name: Test Automation
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: npm install
+      - run: npm run test:smoke
+      - run: npm run test:regression
+```
 
-- **Multi-browser testing** across Chrome, Firefox, Safari
-- **Parallel execution** for faster feedback
-- **Environment-specific testing** (staging, production)
-- **Automated reporting** with Allure
-- **Slack notifications** for team updates
-
-### Manual Triggers
-
+### Integration Commands
 ```bash
-# Trigger specific test suite
-gh workflow run test-automation.yml -f test_suite=smoke
-gh workflow run test-automation.yml -f test_suite=regression
-gh workflow run test-automation.yml -f environment=production
+# CI-friendly commands
+npm run test:smoke        # Quick validation
+npm run test:regression   # Full test suite
+npm run test:api          # API-only (no browser)
+npm run test:headless     # Headless browser mode
 ```
 
-### Scheduled Runs
-
-- **Nightly regression tests** at 2 AM UTC
-- **Smoke tests** on every push/PR
-- **Full suite** on main branch updates
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Key variables in `.env`:
-
-```bash
-# Application URLs
-BASE_URL=https://staging.example.com
-API_URL=https://api-staging.example.com
-
-# Test Configuration  
-DEFAULT_TIMEOUT=30000
-PARALLEL_CHUNKS=3
-
-# Mobile Configuration
-ANDROID_VERSION=11.0
-DEVICE_NAME=emulator-5554
-APP_PATH=./apps/sample-app.apk
-
-# Database (optional)
-DB_HOST=localhost
-DB_NAME=test_db
-DB_USER=test_user
+### Docker Support
+```dockerfile
+# Dockerfile
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+RUN npx playwright install --with-deps
+COPY . .
+CMD ["npm", "run", "test:smoke"]
 ```
 
-### Browser Configuration
-
-```javascript
-// codecept.conf.js
-helpers: {
-  Playwright: {
-    browser: 'chromium', // 'firefox', 'webkit'
-    show: !process.env.CI,
-    windowSize: '1920x1080'
-  }
-}
-```
-
-## 🐛 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
-#### 1. Tests Failing Due to Timing
+#### Windows: "No tests found by pattern"
+**Solution:**
+```cmd
+# Use pattern-free commands
+QUICK_TEST.cmd
+npm run test:all
 
-```javascript
-// ✅ Solution: Use proper waits
-I.waitForElement('.loading-complete', 10);
-I.waitForText('Welcome', 5);
-
-// ❌ Problem: Fixed waits
-I.wait(3); // Unreliable
+# Or use direct CodeceptJS
+npx codeceptjs run --config codecept.final.conf.js
 ```
 
-#### 2. Element Not Found
-
-```javascript
-// ✅ Solution: More robust selectors
-I.seeElement('[data-testid="submit-button"]');
-I.seeElement('button:has-text("Submit")');
-
-// ❌ Problem: Fragile selectors
-I.seeElement('#btn-123'); // May change
-```
-
-#### 3. Mobile Tests Failing
-
+#### Module Not Found Errors
+**Solution:**
 ```bash
-# Check Appium server
-appium doctor
+# Clean install
+rm -rf node_modules package-lock.json
+npm install
 
-# Verify device connection
-adb devices
-
-# Check app installation
-adb shell pm list packages | grep com.yourapp
+# Windows automated fix
+FINAL_WINDOWS_FIX.cmd
 ```
 
-#### 4. API Tests Timing Out
-
-```javascript
-// ✅ Solution: Increase timeout for slow APIs
-I.sendGetRequest('/slow-endpoint', {
-  timeout: 60000
-});
-```
-
-### Debug Commands
-
+#### Browser Not Starting
+**Solution:**
 ```bash
-# Run with verbose output
-npm test -- --verbose
+# Install browsers
+npx playwright install
 
-# Run single test with debug
-npm test -- --grep "specific test" --debug
-
-# Check configuration
-npx codeceptjs def
-
-# Validate setup
-npx codeceptjs list
+# Use API-only tests as fallback
+npm run test:tag:api
 ```
 
-### Getting Help
+### Diagnostic Commands
+```bash
+npm run debug           # Comprehensive environment check
+npm run run-tests       # Auto-tries multiple configurations
+VALIDATE_SUCCESS.cmd    # Windows validation script
+```
 
-1. **Check logs**: `output/logs/test.log`
-2. **Review screenshots**: `output/screenshots/`
-3. **Examine configuration**: `codecept.conf.js`
-4. **Validate environment**: `.env` file
-5. **Test connectivity**: Run single API test first
+### Debug Mode
+```bash
+# Detailed execution logs
+npx codeceptjs run --config codecept.final.conf.js --debug --grep smoke
+
+# Step-by-step execution
+npx codeceptjs run --config codecept.final.conf.js --steps --grep smoke
+```
+
+## 📊 Test Reports
+
+### Viewing Results
+```bash
+# Generate reports
+npm run report
+
+# Open reports
+npm run report:generate
+```
+
+### Output Structure
+```
+output/
+├── logs/              # Execution logs
+├── screenshots/       # Failure screenshots
+├── videos/           # Test execution videos
+└── allure-reports/   # Comprehensive test reports
+```
 
 ## 🤝 Contributing
 
 ### Adding New Tests
-
-1. **Web UI Tests**: Add to `tests/web/`
-2. **API Tests**: Add to `tests/api/`
-3. **Mobile Tests**: Add to `tests/mobile-app/` or `tests/mobile-web/`
-4. **Page Objects**: Add to `pages/web/` or `pages/mobile/`
+1. **Create feature file** in `features/`
+2. **Add step definitions** in `step_definitions/`
+3. **Tag appropriately** for organization
+4. **Test locally** before committing
+5. **Update documentation** as needed
 
 ### Code Standards
+- **BDD First**: Write scenarios in business language
+- **Page Objects**: Use POM pattern for UI tests
+- **Factory Pattern**: Generate test data systematically
+- **Error Handling**: Use custom error classes
+- **Documentation**: JSDoc for all functions
 
-- Use descriptive test names
-- Tag tests appropriately
-- Follow Page Object Model
-- Add assertions with meaningful messages
-- Include both positive and negative test cases
+### Pull Request Process
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-### Before Committing
+## 📚 Additional Resources
 
-```bash
-# Run linting (if configured)
-npm run lint
+### Documentation
+- [CodeceptJS Documentation](https://codecept.io/)
+- [Gherkin Syntax Guide](https://cucumber.io/docs/gherkin/)
+- [Playwright Documentation](https://playwright.dev/)
 
-# Run smoke tests
-npm run test:smoke
+### Support
+- 📁 **Issues**: [GitHub Issues](https://github.com/sreevsr/test-automation-framework/issues)
+- 📖 **Wiki**: [Project Wiki](https://github.com/sreevsr/test-automation-framework/wiki)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/sreevsr/test-automation-framework/discussions)
 
-# Check for security issues
-npm audit
-```
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📞 Support
+## 🚀 Quick Command Reference
 
-For questions, issues, or contributions:
+### Essential Commands
+```bash
+# Setup
+npm install                    # Install dependencies
+FINAL_WINDOWS_FIX.cmd         # Windows automated setup
 
-- **Documentation**: Check this README first
-- **Issues**: Create GitHub issues for bugs
-- **Features**: Discuss new features in team meetings
-- **Questions**: Ask in team chat or create discussions
+# All Tests
+npm run test:all              # All tests, no filtering
+QUICK_TEST.cmd                # Windows: all tests
 
-**Happy Testing! 🧪✨**
+# Tag-Based Testing
+npm run test:tag:smoke        # Smoke tests
+npm run test:tag:regression   # Full regression
+npm run test:tag:api          # API tests only
+npm run test:by-tag           # Interactive tag selection
+
+# Windows GUI
+TAG_MENU.cmd                  # Interactive menu
+SMOKE_TESTS.cmd               # Quick validation
+REGRESSION_TESTS.cmd          # Full test suite
+
+# Troubleshooting
+npm run debug                 # Environment diagnostics
+VALIDATE_SUCCESS.cmd          # Validate setup (Windows)
+```
+
+**🎉 Happy Testing! Your framework is ready for production use.**
