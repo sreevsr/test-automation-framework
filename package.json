@@ -9,9 +9,10 @@
     "test:api": "codeceptjs run --grep '@api'",
     "test:mobile": "codeceptjs run --grep '@mobile'",
     "test:mobile-web": "codeceptjs run --grep '@mobile-web'",
-    "test:smoke": "codeceptjs run --config codecept.final.conf.js --grep '@smoke'",
+    "test:smoke": "codeceptjs run --config codecept.final.conf.js --grep @smoke",
     "test:final": "codeceptjs run --config codecept.final.conf.js",
-    "test:final:smoke": "codeceptjs run --config codecept.final.conf.js --grep '@smoke'",
+    "test:final:smoke": "codeceptjs run --config codecept.final.conf.js --grep @smoke",
+    "test:all": "codeceptjs run --config codecept.final.conf.js",
     "test:regression": "codeceptjs run --config codecept.bdd.conf.js --grep '@regression'",
     "test:bdd": "codeceptjs run --config codecept.bdd.conf.js",
     "test:bdd:smoke": "codeceptjs run --config codecept.bdd.conf.js --grep '@smoke'",
@@ -31,6 +32,7 @@
     "report:generate": "allure generate output/allure-reports --clean",
     "setup": "npm install && npx playwright install",
     "debug": "node test-debug.js",
+    "run-tests": "node test-runner.js",
     "clean": "rm -rf output/*"
   },
   "dependencies": {
