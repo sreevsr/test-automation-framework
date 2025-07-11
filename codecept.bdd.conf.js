@@ -58,10 +58,6 @@ module.exports.config = {
     screenshotOnFail: {
       enabled: true
     },
-    allure: {
-      enabled: true,
-      require: '@codeceptjs/allure-legacy'
-    },
     retryFailedStep: {
       enabled: true,
       retries: 2

@@ -15,6 +15,8 @@
     "test:bdd:smoke": "codeceptjs run --config codecept.bdd.conf.js --grep '@smoke'",
     "test:bdd:api": "codeceptjs run --config codecept.bdd.conf.js --grep '@api'",
     "test:bdd:web": "codeceptjs run --config codecept.bdd.conf.js --grep '@web'",
+    "test:minimal": "codeceptjs run --config codecept.minimal.conf.js",
+    "test:minimal:smoke": "codeceptjs run --config codecept.minimal.conf.js --grep '@smoke'",
     "test:simple": "codeceptjs run --config codecept.simple.conf.js",
     "test:simple:api": "codeceptjs run --config codecept.simple.conf.js --grep '@api'",
     "test:parallel": "codeceptjs run-multiple parallel",
@@ -42,8 +44,7 @@
     "dotenv": "^16.0.0",
     "moment": "^2.29.0",
     "chai": "^4.3.0",
-    "axios": "^1.5.0",
-    "@codeceptjs/allure-legacy": "^2.0.0"
+    "axios": "^1.5.0"
   },
   "keywords": [
     "codeceptjs",

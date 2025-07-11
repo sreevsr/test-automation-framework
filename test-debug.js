@@ -100,12 +100,12 @@ https.get(testUrl, (res) => {
 });
 
 function runSimpleTest() {
-  console.log('\n🧪 Running simple test:');
-  console.log('Command: npx codeceptjs run --config codecept.simple.conf.js --grep "@api"');
+  console.log('\n🧪 Running minimal test:');
+  console.log('Command: npx codeceptjs run --config codecept.minimal.conf.js --grep "@api"');
   
   const isWindows = process.platform === 'win32';
   const command = isWindows ? 'npx.cmd' : 'npx';
-  const args = ['codeceptjs', 'run', '--config', 'codecept.simple.conf.js', '--grep', '@api'];
+  const args = ['codeceptjs', 'run', '--config', 'codecept.minimal.conf.js', '--grep', '@api'];
   
   const child = spawn(command, args, {
     stdio: 'inherit',
@@ -117,20 +117,30 @@ function runSimpleTest() {
     
     if (code === 0) {
       console.log('✅ Tests executed successfully!');
+      console.log('\n🎉 Your environment is working correctly!');
+      console.log('   You can now run: npm run test:minimal:smoke');
     } else {
       console.log('❌ Tests failed or encountered issues');
-      console.log('\n🔧 Troubleshooting suggestions:');
-      console.log('1. Try running: npm run test:simple:api');
-      console.log('2. Check if browsers are installed: npx playwright install');
-      console.log('3. Try BDD tests: npm run test:bdd:api');
-      console.log('4. Check the Windows setup guide: WINDOWS_SETUP.md');
+      console.log('\n🔧 Troubleshooting suggestions (try in order):');
+      console.log('1. npm run test:minimal:smoke    - Minimal BDD smoke tests');
+      console.log('2. npm run test:simple:api       - Simple API tests');
+      console.log('3. Clean install: rm -rf node_modules && npm install');
+      console.log('4. Run the Windows fix script: windows-fix.bat');
+      console.log('5. Check the Windows setup guide: WINDOWS_SETUP.md');
     }
     
-    console.log('\n📋 Available commands:');
-    console.log('  npm run test:simple:api    - Simple API tests');
-    console.log('  npm run test:bdd:api       - BDD API tests');
-    console.log('  npm run test:smoke         - Smoke tests');
+    console.log('\n📋 Available commands (in order of reliability):');
+    console.log('  npm run test:minimal:smoke - Minimal BDD smoke tests (recommended)');
+    console.log('  npm run test:simple:api    - Simple API tests (fallback)');
+    console.log('  npm run test:smoke         - Full BDD smoke tests');
+    console.log('  npm run test:bdd:api       - Full BDD API tests');
     console.log('  npm run test:bdd           - All BDD tests');
+    
+    if (isWindows) {
+      console.log('\n🪟 Windows-specific commands:');
+      console.log('  windows-fix.bat            - Automated fix script');
+      console.log('  npm run debug              - This diagnostic script');
+    }
   });
   
   child.on('error', (err) => {
@@ -139,6 +149,9 @@ function runSimpleTest() {
     if (err.code === 'ENOENT') {
       console.log('💡 This usually means CodeceptJS is not installed properly.');
       console.log('   Try running: npm install');
+      if (isWindows) {
+        console.log('   Or run: windows-fix.bat');
+      }
     }
   });
 }
