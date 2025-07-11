@@ -9,8 +9,12 @@
     "test:api": "codeceptjs run --grep '@api'",
     "test:mobile": "codeceptjs run --grep '@mobile'",
     "test:mobile-web": "codeceptjs run --grep '@mobile-web'",
-    "test:smoke": "codeceptjs run --grep '@smoke'",
-    "test:regression": "codeceptjs run --grep '@regression'",
+    "test:smoke": "codeceptjs run --config codecept.bdd.conf.js --grep '@smoke'",
+    "test:regression": "codeceptjs run --config codecept.bdd.conf.js --grep '@regression'",
+    "test:bdd": "codeceptjs run --config codecept.bdd.conf.js",
+    "test:bdd:smoke": "codeceptjs run --config codecept.bdd.conf.js --grep '@smoke'",
+    "test:bdd:api": "codeceptjs run --config codecept.bdd.conf.js --grep '@api'",
+    "test:bdd:web": "codeceptjs run --config codecept.bdd.conf.js --grep '@web'",
     "test:simple": "codeceptjs run --config codecept.simple.conf.js",
     "test:simple:api": "codeceptjs run --config codecept.simple.conf.js --grep '@api'",
     "test:parallel": "codeceptjs run-multiple parallel",
@@ -20,6 +24,7 @@
     "report": "allure serve output/allure-reports",
     "report:generate": "allure generate output/allure-reports --clean",
     "setup": "npm install && npx playwright install",
+    "debug": "node test-debug.js",
     "clean": "rm -rf output/*"
   },
   "dependencies": {
@@ -37,7 +42,8 @@
     "dotenv": "^16.0.0",
     "moment": "^2.29.0",
     "chai": "^4.3.0",
-    "axios": "^1.5.0"
+    "axios": "^1.5.0",
+    "@codeceptjs/allure-legacy": "^2.0.0"
   },
   "keywords": [
     "codeceptjs",
